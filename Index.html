@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Harvey Clicker</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: linear-gradient(to right, #111, #222);
+  color: white;
+  overflow-x: hidden;
+}
+
+/* HARVEY IMAGE */
+img {
+  width: 220px;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.3s;
+  box-shadow: 0 0 20px limegreen;
+}
+
+/* Glow pulse */
+@keyframes glow {
+  0% { box-shadow: 0 0 10px limegreen; }
+  50% { box-shadow: 0 0 30px limegreen; }
+  100% { box-shadow: 0 0 10px limegreen; }
+}
+
+img {
+  animation: glow 2s infinite;
+}
+
+img:active {
+  transform: scale(0.85) rotate(-2deg);
+}
+
+/* SCORE */
+#score {
+  font-size: 30px;
+  margin: 15px;
+}
+
+/* BUTTONS */
+button {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 260px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  background: limegreen;
+  color: black;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  background: lightgreen;
+  transform: scale(1.05);
+  box-shadow: 0 0 10px lime;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+/* FLOATING TEXT */
+.floating {
+  position: absolute;
+  color: lime;
+  font-weight: bold;
+  animation: floatUp 1s forwards;
+  pointer-events: none;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+
+/* SCREEN SHAKE */
+@keyframes shake {
+  0% { transform: translate(0px, 0px); }
+  25% { transform: translate(3px, -3px); }
+  50% { transform: translate(-3px, 3px); }
+  75% { transform: translate(3px, 3px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+.shake {
+  animation: shake 0.2s;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔥 HARVEY CLICKER 🔥</h1>
+
+<img id="harvey" src="harvey.jpg" onclick="clickHarvey(event)">
+
+<div id="score">Juice: 0</div>
+<div id="perSec">Per Second: 0</div>
+
+<div class="shop">
+<h2>🛒 Upgrades</h2>
+
+<button onclick="buyClick()">
+Stronger Click (+1) - Cost: <span id="clickCost">10</span>
+</button>
+
+<button onclick="buyAuto()">
+Auto Clicker (+1/sec) - Cost: <span id="autoCost">25</span>
+</button>
+
+<button onclick="buyMega()">
+Mega Juice (+5/sec) - Cost: <span id="megaCost">100</span>
+</button>
+</div>
+
+<script>
+let juice = 0;
+let clickPower = 1;
+let perSecond = 0;
+
+let clickCost = 10;
+let autoCost = 25;
+let megaCost = 100;
+
+function clickHarvey(e) {
+  juice += clickPower;
+  update();
+
+  // Floating text
+  let float = document.createElement("div");
+  float.className = "floating";
+  float.innerText = "+" + clickPower;
+
+  float.style.left = e.pageX + "px";
+  float.style.top = e.pageY + "px";
+
+  document.body.appendChild(float);
+
+  setTimeout(() => float.remove(), 1000);
+
+  // Screen shake for big clicks
+  if (clickPower >= 5) {
+    document.body.classList.add("shake");
+    setTimeout(() => document.body.classList.remove("shake"), 200);
+  }
+}
+
+function buyClick() {
+  if (juice >= clickCost) {
+    juice -= clickCost;
+    clickPower++;
+    clickCost = Math.floor(clickCost * 1.5);
+    update();
+  }
+}
+
+function buyAuto() {
+  if (juice >= autoCost) {
+    juice -= autoCost;
+    perSecond += 1;
+    autoCost = Math.floor(autoCost * 1.6);
+    update();
+  }
+}
+
+function buyMega() {
+  if (juice >= megaCost) {
+    juice -= megaCost;
+    perSecond += 5;
+    megaCost = Math.floor(megaCost * 1.8);
+    update();
+  }
+}
+
+function update() {
+  document.getElementById("score").innerText = "Juice: " + juice;
+  document.getElementById("perSec").innerText = "Per Second: " + perSecond;
+  document.getElementById("clickCost").innerText = clickCost;
+  document.getElementById("autoCost").innerText = autoCost;
+  document.getElementById("megaCost").innerText = megaCost;
+
+  save();
+}
+
+// AUTO GENERATION
+setInterval(() => {
+  juice += perSecond;
+  update();
+}, 1000);
+
+// SAVE SYSTEM
+function save() {
+  localStorage.setItem("harveySave", JSON.stringify({
+    juice, clickPower, perSecond, clickCost, autoCost, megaCost
+  }));
+}
+
+function load() {
+  let saveData = JSON.parse(localStorage.getItem("harveySave"));
+  if (saveData) {
+    juice = saveData.juice;
+    clickPower = saveData.clickPower;
+    perSecond = saveData.perSecond;
+    clickCost = saveData.clickCost;
+    autoCost = saveData.autoCost;
+    megaCost = saveData.megaCost;
+  }
+}
+
+load();
+update();
+</script>
+
+</body>
+</html>
