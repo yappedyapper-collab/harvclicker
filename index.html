@@ -19,13 +19,11 @@ img {
   border-radius: 20px;
   cursor: pointer;
   box-shadow: 0 0 20px lime;
-  transition: 0.1s;
 }
 img:active { transform: scale(0.85); }
 
 button {
-  display: block;
-  margin: 10px auto;
+  margin: 10px;
   padding: 12px;
   width: 260px;
   border-radius: 10px;
@@ -35,24 +33,37 @@ button {
 }
 button:hover { transform: scale(1.05); }
 
-#popupContainer {
+/* RIGHT BUTTON */
+#achBtn {
   position: fixed;
-  top: 20px;
   right: 20px;
-}
-
-.popup {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 24px;
   background: gold;
   color: black;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 10px;
-  animation: fadeOut 3s forwards;
+  box-shadow: 0 0 15px gold;
+  z-index: 1000;
 }
 
-@keyframes fadeOut {
-  0% {opacity:1;}
-  100% {opacity:0; transform: translateX(100px);}
+/* PANEL */
+#achievements {
+  position: fixed;
+  right: -300px;
+  top: 0;
+  width: 250px;
+  height: 100%;
+  background: #111;
+  border-left: 2px solid gold;
+  padding: 20px;
+  transition: 0.3s;
+}
+
+#achievements.open {
+  right: 0;
 }
 </style>
 </head>
@@ -65,7 +76,7 @@ button:hover { transform: scale(1.05); }
 
 <div id="score">Juice: 0</div>
 <div id="perSec">Per Second: 0</div>
-<div id="rebirths">Rebirths: 0 (x1 multiplier)</div>
+<div id="rebirths">Rebirths: 0 (x1)</div>
 
 <button onclick="rebirth()">♻️ Rebirth (1000 Juice)</button>
 
@@ -74,13 +85,14 @@ button:hover { transform: scale(1.05); }
 <button onclick="buyAuto()">Auto +1/sec - <span id="autoCost">25</span></button>
 <button onclick="buyMega()">Mega +5/sec - <span id="megaCost">100</span></button>
 
-<button onclick="toggleAchievements()">🏆 Achievements</button>
+<!-- RIGHT BUTTON -->
+<button id="achBtn" onclick="toggleAchievements()">🏆</button>
 
-<div id="achievements" style="display:none;">
+<!-- PANEL -->
+<div id="achievements">
+  <h2>🏆 Achievements</h2>
   <p id="achList">None yet...</p>
 </div>
-
-<div id="popupContainer"></div>
 
 <script>
 let juice = 0;
@@ -94,7 +106,7 @@ let megaCost = 100;
 let achievements = [];
 let rebirths = 0;
 
-// 🔊 sounds
+// sounds
 const clickSound = new Audio("https://www.myinstants.com/media/sounds/mouse-click.mp3");
 const buySound = new Audio("https://www.myinstants.com/media/sounds/cash-register.mp3");
 
@@ -142,7 +154,7 @@ function buyMega() {
   }
 }
 
-// ♻️ REBIRTH
+// REBIRTH
 function rebirth() {
   if (juice >= 1000) {
     rebirths++;
@@ -152,17 +164,14 @@ function rebirth() {
     clickCost = 10;
     autoCost = 25;
     megaCost = 100;
-
-    showPopup("♻️ Rebirth! Multiplier increased!");
     update();
   }
 }
 
-// 🏆 ACHIEVEMENTS
+// ACHIEVEMENTS
 function unlockAchievement(name) {
   if (!achievements.includes(name)) {
     achievements.push(name);
-    showPopup("🏆 " + name);
   }
 }
 
@@ -173,19 +182,9 @@ function checkAchievements() {
   if (rebirths >= 1) unlockAchievement("First Rebirth");
 }
 
-// 📋 Toggle
+// TOGGLE PANEL
 function toggleAchievements() {
-  const panel = document.getElementById("achievements");
-  panel.style.display = panel.style.display === "none" ? "block" : "none";
-}
-
-// POPUP
-function showPopup(text) {
-  const popup = document.createElement("div");
-  popup.className = "popup";
-  popup.innerText = text;
-  document.getElementById("popupContainer").appendChild(popup);
-  setTimeout(() => popup.remove(), 3000);
+  document.getElementById("achievements").classList.toggle("open");
 }
 
 // UPDATE
@@ -199,8 +198,10 @@ function update() {
   document.getElementById("autoCost").innerText = autoCost;
   document.getElementById("megaCost").innerText = megaCost;
 
-  document.getElementById("achList").innerText =
-    achievements.length ? achievements.join(", ") : "None yet...";
+  document.getElementById("achList").innerHTML =
+    achievements.length
+      ? achievements.map(a => "✔ " + a).join("<br>")
+      : "None yet...";
 
   save();
 }
