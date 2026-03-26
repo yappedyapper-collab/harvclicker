@@ -12,40 +12,17 @@ body {
   color: white;
 }
 
-/* TITLE */
-h1 {
-  text-shadow: 0 0 10px lime;
-}
+h1 { text-shadow: 0 0 10px lime; }
 
-/* HARVEY */
 img {
   width: 220px;
   border-radius: 20px;
   cursor: pointer;
-  transition: 0.1s;
   box-shadow: 0 0 20px lime;
+  transition: 0.1s;
 }
+img:active { transform: scale(0.85); }
 
-img:active {
-  transform: scale(0.85);
-}
-
-/* STATS */
-#score, #perSec {
-  font-size: 22px;
-  margin: 10px;
-}
-
-/* SHOP */
-.shop {
-  margin-top: 20px;
-  padding: 15px;
-  border-radius: 15px;
-  background: rgba(0,255,0,0.05);
-  box-shadow: 0 0 10px #00ff00;
-}
-
-/* BUTTONS */
 button {
   display: block;
   margin: 10px auto;
@@ -54,24 +31,28 @@ button {
   border-radius: 10px;
   border: none;
   cursor: pointer;
-  font-size: 14px;
   background: linear-gradient(45deg, limegreen, green);
+}
+button:hover { transform: scale(1.05); }
+
+#popupContainer {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+}
+
+.popup {
+  background: gold;
   color: black;
-  transition: 0.2s;
-}
-
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 10px lime;
-}
-
-/* ACHIEVEMENTS */
-#achievements {
-  margin-top: 20px;
   padding: 10px;
+  margin-top: 10px;
   border-radius: 10px;
-  background: rgba(255,255,0,0.05);
-  box-shadow: 0 0 10px gold;
+  animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+  0% {opacity:1;}
+  100% {opacity:0; transform: translateX(100px);}
 }
 </style>
 </head>
@@ -84,30 +65,24 @@ button:hover {
 
 <div id="score">Juice: 0</div>
 <div id="perSec">Per Second: 0</div>
+<div id="rebirths">Rebirths: 0 (x1 multiplier)</div>
 
-<div class="shop">
-<h2>🛒 Upgrades</h2>
+<button onclick="rebirth()">♻️ Rebirth (1000 Juice)</button>
 
-<button onclick="buyClick()">
-Stronger Click (+1) - Cost: <span id="clickCost">10</span>
-</button>
+<h2>🛒 Shop</h2>
+<button onclick="buyClick()">Stronger Click - <span id="clickCost">10</span></button>
+<button onclick="buyAuto()">Auto +1/sec - <span id="autoCost">25</span></button>
+<button onclick="buyMega()">Mega +5/sec - <span id="megaCost">100</span></button>
 
-<button onclick="buyAuto()">
-Auto Clicker (+1/sec) - Cost: <span id="autoCost">25</span>
-</button>
+<button onclick="toggleAchievements()">🏆 Achievements</button>
 
-<button onclick="buyMega()">
-Mega Juice (+5/sec) - Cost: <span id="megaCost">100</span>
-</button>
+<div id="achievements" style="display:none;">
+  <p id="achList">None yet...</p>
 </div>
 
-<div id="achievements">
-<h2>🏆 Achievements</h2>
-<p id="achList">None yet...</p>
-</div>
+<div id="popupContainer"></div>
 
 <script>
-// GAME DATA
 let juice = 0;
 let clickPower = 1;
 let perSecond = 0;
@@ -117,15 +92,20 @@ let autoCost = 25;
 let megaCost = 100;
 
 let achievements = [];
+let rebirths = 0;
 
-// 🔊 SOUND
+// 🔊 sounds
 const clickSound = new Audio("https://www.myinstants.com/media/sounds/mouse-click.mp3");
 const buySound = new Audio("https://www.myinstants.com/media/sounds/cash-register.mp3");
 
+// multiplier
+function getMultiplier() {
+  return 1 + rebirths * 0.5;
+}
+
 // CLICK
 function clickHarvey() {
-  juice += clickPower;
-  clickSound.currentTime = 0;
+  juice += clickPower * getMultiplier();
   clickSound.play();
   checkAchievements();
   update();
@@ -145,7 +125,7 @@ function buyClick() {
 function buyAuto() {
   if (juice >= autoCost) {
     juice -= autoCost;
-    perSecond += 1;
+    perSecond++;
     autoCost = Math.floor(autoCost * 1.6);
     buySound.play();
     update();
@@ -162,23 +142,59 @@ function buyMega() {
   }
 }
 
-// 🏆 ACHIEVEMENTS
-function checkAchievements() {
-  if (juice >= 10 && !achievements.includes("Beginner")) {
-    achievements.push("Beginner 🟢");
-  }
-  if (juice >= 100 && !achievements.includes("Juice Master")) {
-    achievements.push("Juice Master 🟡");
-  }
-  if (juice >= 1000 && !achievements.includes("Harvey God")) {
-    achievements.push("Harvey God 🔴");
+// ♻️ REBIRTH
+function rebirth() {
+  if (juice >= 1000) {
+    rebirths++;
+    juice = 0;
+    clickPower = 1;
+    perSecond = 0;
+    clickCost = 10;
+    autoCost = 25;
+    megaCost = 100;
+
+    showPopup("♻️ Rebirth! Multiplier increased!");
+    update();
   }
 }
 
-// UPDATE UI
+// 🏆 ACHIEVEMENTS
+function unlockAchievement(name) {
+  if (!achievements.includes(name)) {
+    achievements.push(name);
+    showPopup("🏆 " + name);
+  }
+}
+
+function checkAchievements() {
+  if (juice >= 10) unlockAchievement("Beginner");
+  if (juice >= 100) unlockAchievement("Juice Master");
+  if (juice >= 1000) unlockAchievement("Harvey God");
+  if (rebirths >= 1) unlockAchievement("First Rebirth");
+}
+
+// 📋 Toggle
+function toggleAchievements() {
+  const panel = document.getElementById("achievements");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+
+// POPUP
+function showPopup(text) {
+  const popup = document.createElement("div");
+  popup.className = "popup";
+  popup.innerText = text;
+  document.getElementById("popupContainer").appendChild(popup);
+  setTimeout(() => popup.remove(), 3000);
+}
+
+// UPDATE
 function update() {
-  document.getElementById("score").innerText = "Juice: " + juice;
+  document.getElementById("score").innerText = "Juice: " + Math.floor(juice);
   document.getElementById("perSec").innerText = "Per Second: " + perSecond;
+  document.getElementById("rebirths").innerText =
+    "Rebirths: " + rebirths + " (x" + getMultiplier().toFixed(1) + ")";
+
   document.getElementById("clickCost").innerText = clickCost;
   document.getElementById("autoCost").innerText = autoCost;
   document.getElementById("megaCost").innerText = megaCost;
@@ -191,7 +207,7 @@ function update() {
 
 // AUTO
 setInterval(() => {
-  juice += perSecond;
+  juice += perSecond * getMultiplier();
   checkAchievements();
   update();
 }, 1000);
@@ -199,20 +215,21 @@ setInterval(() => {
 // SAVE
 function save() {
   localStorage.setItem("harveySave", JSON.stringify({
-    juice, clickPower, perSecond, clickCost, autoCost, megaCost, achievements
+    juice, clickPower, perSecond, clickCost, autoCost, megaCost, achievements, rebirths
   }));
 }
 
 function load() {
-  let saveData = JSON.parse(localStorage.getItem("harveySave"));
-  if (saveData) {
-    juice = saveData.juice;
-    clickPower = saveData.clickPower;
-    perSecond = saveData.perSecond;
-    clickCost = saveData.clickCost;
-    autoCost = saveData.autoCost;
-    megaCost = saveData.megaCost;
-    achievements = saveData.achievements || [];
+  let data = JSON.parse(localStorage.getItem("harveySave"));
+  if (data) {
+    juice = data.juice;
+    clickPower = data.clickPower;
+    perSecond = data.perSecond;
+    clickCost = data.clickCost;
+    autoCost = data.autoCost;
+    megaCost = data.megaCost;
+    achievements = data.achievements || [];
+    rebirths = data.rebirths || 0;
   }
 }
 
