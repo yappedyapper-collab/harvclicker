@@ -8,91 +8,70 @@
 body {
   font-family: Arial;
   text-align: center;
-  background: linear-gradient(to right, #111, #222);
+  background: radial-gradient(circle, #111, #000);
   color: white;
-  overflow-x: hidden;
 }
 
-/* HARVEY IMAGE */
+/* TITLE */
+h1 {
+  text-shadow: 0 0 10px lime;
+}
+
+/* HARVEY */
 img {
   width: 220px;
-  border-radius: 15px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.3s;
-  box-shadow: 0 0 20px limegreen;
-}
-
-/* Glow pulse */
-@keyframes glow {
-  0% { box-shadow: 0 0 10px limegreen; }
-  50% { box-shadow: 0 0 30px limegreen; }
-  100% { box-shadow: 0 0 10px limegreen; }
-}
-
-img {
-  animation: glow 2s infinite;
+  transition: 0.1s;
+  box-shadow: 0 0 20px lime;
 }
 
 img:active {
-  transform: scale(0.85) rotate(-2deg);
+  transform: scale(0.85);
 }
 
-/* SCORE */
-#score {
-  font-size: 30px;
-  margin: 15px;
+/* STATS */
+#score, #perSec {
+  font-size: 22px;
+  margin: 10px;
+}
+
+/* SHOP */
+.shop {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 15px;
+  background: rgba(0,255,0,0.05);
+  box-shadow: 0 0 10px #00ff00;
 }
 
 /* BUTTONS */
 button {
   display: block;
   margin: 10px auto;
-  padding: 10px;
+  padding: 12px;
   width: 260px;
   border-radius: 10px;
   border: none;
   cursor: pointer;
   font-size: 14px;
-  background: limegreen;
+  background: linear-gradient(45deg, limegreen, green);
   color: black;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: 0.2s;
 }
 
 button:hover {
-  background: lightgreen;
   transform: scale(1.05);
   box-shadow: 0 0 10px lime;
 }
 
-button:active {
-  transform: scale(0.95);
-}
-
-/* FLOATING TEXT */
-.floating {
-  position: absolute;
-  color: lime;
-  font-weight: bold;
-  animation: floatUp 1s forwards;
-  pointer-events: none;
-}
-
-@keyframes floatUp {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-60px); }
-}
-
-/* SCREEN SHAKE */
-@keyframes shake {
-  0% { transform: translate(0px, 0px); }
-  25% { transform: translate(3px, -3px); }
-  50% { transform: translate(-3px, 3px); }
-  75% { transform: translate(3px, 3px); }
-  100% { transform: translate(0px, 0px); }
-}
-
-.shake {
-  animation: shake 0.2s;
+/* ACHIEVEMENTS */
+#achievements {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,0,0.05);
+  box-shadow: 0 0 10px gold;
 }
 </style>
 </head>
@@ -101,7 +80,7 @@ button:active {
 
 <h1>🔥 HARVEY CLICKER 🔥</h1>
 
-<img id="harvey" src="harvey.jpg" onclick="clickHarvey(event)">
+<img src="harvey.jpg" onclick="clickHarvey()">
 
 <div id="score">Juice: 0</div>
 <div id="perSec">Per Second: 0</div>
@@ -122,7 +101,13 @@ Mega Juice (+5/sec) - Cost: <span id="megaCost">100</span>
 </button>
 </div>
 
+<div id="achievements">
+<h2>🏆 Achievements</h2>
+<p id="achList">None yet...</p>
+</div>
+
 <script>
+// GAME DATA
 let juice = 0;
 let clickPower = 1;
 let perSecond = 0;
@@ -131,34 +116,28 @@ let clickCost = 10;
 let autoCost = 25;
 let megaCost = 100;
 
-function clickHarvey(e) {
+let achievements = [];
+
+// 🔊 SOUND
+const clickSound = new Audio("https://www.myinstants.com/media/sounds/mouse-click.mp3");
+const buySound = new Audio("https://www.myinstants.com/media/sounds/cash-register.mp3");
+
+// CLICK
+function clickHarvey() {
   juice += clickPower;
+  clickSound.currentTime = 0;
+  clickSound.play();
+  checkAchievements();
   update();
-
-  // Floating text
-  let float = document.createElement("div");
-  float.className = "floating";
-  float.innerText = "+" + clickPower;
-
-  float.style.left = e.pageX + "px";
-  float.style.top = e.pageY + "px";
-
-  document.body.appendChild(float);
-
-  setTimeout(() => float.remove(), 1000);
-
-  // Screen shake for big clicks
-  if (clickPower >= 5) {
-    document.body.classList.add("shake");
-    setTimeout(() => document.body.classList.remove("shake"), 200);
-  }
 }
 
+// BUY
 function buyClick() {
   if (juice >= clickCost) {
     juice -= clickCost;
     clickPower++;
     clickCost = Math.floor(clickCost * 1.5);
+    buySound.play();
     update();
   }
 }
@@ -168,6 +147,7 @@ function buyAuto() {
     juice -= autoCost;
     perSecond += 1;
     autoCost = Math.floor(autoCost * 1.6);
+    buySound.play();
     update();
   }
 }
@@ -177,10 +157,25 @@ function buyMega() {
     juice -= megaCost;
     perSecond += 5;
     megaCost = Math.floor(megaCost * 1.8);
+    buySound.play();
     update();
   }
 }
 
+// 🏆 ACHIEVEMENTS
+function checkAchievements() {
+  if (juice >= 10 && !achievements.includes("Beginner")) {
+    achievements.push("Beginner 🟢");
+  }
+  if (juice >= 100 && !achievements.includes("Juice Master")) {
+    achievements.push("Juice Master 🟡");
+  }
+  if (juice >= 1000 && !achievements.includes("Harvey God")) {
+    achievements.push("Harvey God 🔴");
+  }
+}
+
+// UPDATE UI
 function update() {
   document.getElementById("score").innerText = "Juice: " + juice;
   document.getElementById("perSec").innerText = "Per Second: " + perSecond;
@@ -188,19 +183,23 @@ function update() {
   document.getElementById("autoCost").innerText = autoCost;
   document.getElementById("megaCost").innerText = megaCost;
 
+  document.getElementById("achList").innerText =
+    achievements.length ? achievements.join(", ") : "None yet...";
+
   save();
 }
 
-// AUTO GENERATION
+// AUTO
 setInterval(() => {
   juice += perSecond;
+  checkAchievements();
   update();
 }, 1000);
 
-// SAVE SYSTEM
+// SAVE
 function save() {
   localStorage.setItem("harveySave", JSON.stringify({
-    juice, clickPower, perSecond, clickCost, autoCost, megaCost
+    juice, clickPower, perSecond, clickCost, autoCost, megaCost, achievements
   }));
 }
 
@@ -213,6 +212,7 @@ function load() {
     clickCost = saveData.clickCost;
     autoCost = saveData.autoCost;
     megaCost = saveData.megaCost;
+    achievements = saveData.achievements || [];
   }
 }
 
