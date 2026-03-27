@@ -1,18 +1,11 @@
-// Cheats / debug commands
 window.game = {
   addJuice(amount) {
     juice += amount;
     update();
-    console.log("Added juice:", amount);
   },
 
   setJuice(amount) {
     juice = amount;
-    update();
-  },
-
-  addRebirths(amount) {
-    rebirths += amount;
     update();
   },
 
