@@ -46,7 +46,6 @@ button:hover { transform: scale(1.05); }
   background: gold;
   color: black;
   box-shadow: 0 0 15px gold;
-  z-index: 1000;
 }
 
 /* PANEL */
@@ -61,10 +60,7 @@ button:hover { transform: scale(1.05); }
   padding: 20px;
   transition: 0.3s;
 }
-
-#achievements.open {
-  right: 0;
-}
+#achievements.open { right: 0; }
 </style>
 </head>
 
@@ -85,16 +81,15 @@ button:hover { transform: scale(1.05); }
 <button onclick="buyAuto()">Auto +1/sec - <span id="autoCost">25</span></button>
 <button onclick="buyMega()">Mega +5/sec - <span id="megaCost">100</span></button>
 
-<!-- RIGHT BUTTON -->
 <button id="achBtn" onclick="toggleAchievements()">🏆</button>
 
-<!-- PANEL -->
 <div id="achievements">
   <h2>🏆 Achievements</h2>
   <p id="achList">None yet...</p>
 </div>
 
 <script>
+// GAME STATE (GLOBAL)
 let juice = 0;
 let clickPower = 1;
 let perSecond = 0;
@@ -106,11 +101,11 @@ let megaCost = 100;
 let achievements = [];
 let rebirths = 0;
 
-// sounds
+// SOUNDS
 const clickSound = new Audio("https://www.myinstants.com/media/sounds/mouse-click.mp3");
 const buySound = new Audio("https://www.myinstants.com/media/sounds/cash-register.mp3");
 
-// multiplier
+// MULTIPLIER
 function getMultiplier() {
   return 1 + rebirths * 0.5;
 }
@@ -123,7 +118,7 @@ function clickHarvey() {
   update();
 }
 
-// BUY
+// SHOP
 function buyClick() {
   if (juice >= clickCost) {
     juice -= clickCost;
@@ -182,12 +177,12 @@ function checkAchievements() {
   if (rebirths >= 1) unlockAchievement("First Rebirth");
 }
 
-// TOGGLE PANEL
+// PANEL
 function toggleAchievements() {
   document.getElementById("achievements").classList.toggle("open");
 }
 
-// UPDATE
+// UPDATE UI
 function update() {
   document.getElementById("score").innerText = "Juice: " + Math.floor(juice);
   document.getElementById("perSec").innerText = "Per Second: " + perSecond;
@@ -234,12 +229,35 @@ function load() {
   }
 }
 
+// 🔥 CHEAT COMMANDS BUILT-IN
+window.game = {
+  addJuice(amount) {
+    juice += amount;
+    update();
+  },
+
+  setJuice(amount) {
+    juice = amount;
+    update();
+  },
+
+  addRebirths(amount) {
+    rebirths += amount;
+    update();
+  },
+
+  maxAll() {
+    juice = 999999;
+    clickPower = 100;
+    perSecond = 100;
+    rebirths = 10;
+    update();
+  }
+};
+
 load();
 update();
 </script>
-  
-<script src="cheats.js"></script>
-  
+
 </body>
 </html>
-
